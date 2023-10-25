@@ -7,3 +7,4 @@ new_dist
 old_dist
 .cache
 .DS_Store
+package_checksum.txt
