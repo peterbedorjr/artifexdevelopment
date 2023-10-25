@@ -282,7 +282,6 @@ body {
     background-color: var(--purple);
     background-size: cover;
     background-position: -20%;
-    font-family: 'Courier Prime', monospace;
     font-family: 'DM Sans', sans-serif;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
