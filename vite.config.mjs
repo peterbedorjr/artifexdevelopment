@@ -8,8 +8,8 @@ export default defineConfig({
         assetsInlineLimit: 0,
     },
     plugins: [
-        // ViteFaviconsPlugin({
-        //     logo: resolve(__dirname, 'src', 'images', 'artifex-logo-PINK.png'),
-        // }),
+        ViteFaviconsPlugin({
+            logo: resolve(__dirname, 'src', 'images', 'artifex-logo-PINK.png'),
+        }),
     ],
 });
