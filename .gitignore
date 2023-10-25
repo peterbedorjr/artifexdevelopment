@@ -3,5 +3,7 @@
 # Useful .gitignore templates: https://github.com/github/gitignore
 node_modules
 dist
+new_dist
+old_dist
 .cache
 .DS_Store
