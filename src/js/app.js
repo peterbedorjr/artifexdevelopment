@@ -96,7 +96,7 @@ void main() {
 
       if (!prefersReducedMotion) {
         // Analog stick-like control
-        const speedFactor = 0.15; // Adjust this to make it move faster or slower
+        const speedFactor = 0.01; // Adjust this to make it move faster or slower
         camera.position.x += mouse.x * speedFactor;
         camera.position.y += -mouse.y * speedFactor;
 

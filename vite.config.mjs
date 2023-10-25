@@ -1,4 +1,4 @@
-import vitePluginFaviconsInject from 'vite-plugin-favicons-inject';
+import { ViteFaviconsPlugin } from 'vite-plugin-favicon2';
 import { defineConfig } from 'vite'
 import { resolve } from 'path';
 
@@ -7,6 +7,8 @@ export default defineConfig({
         assetsInlineLimit: 0,
     },
     plugins: [
-        vitePluginFaviconsInject('./src/images/artifex-logo-PINK.png'),
+        ViteFaviconsPlugin({
+            logo: resolve(__dirname, 'src', 'images', 'artifex-logo-PINK.png'),
+        }),
     ],
 });

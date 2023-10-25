@@ -13,6 +13,6 @@
   },
   "devDependencies": {
     "vite": "^4.4.5",
-    "vite-plugin-favicons-inject": "^2.2.0"
+    "vite-plugin-favicon2": "^1.1.5"
   }
 }
