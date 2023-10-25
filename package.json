@@ -9,7 +9,8 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^4.4.5"
+    "vite": "^4.4.5",
+    "vite-plugin-favicon": "^1.0.8"
   },
   "dependencies": {
     "three": "^0.157.0"
