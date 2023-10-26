@@ -284,6 +284,8 @@ body {
     background-position: -20%;
     font-family: 'DM Sans', sans-serif;
     overflow: hidden;
+    max-width: 100vw;
+    max-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -301,28 +303,34 @@ body {
     transition: opacity 500ms ease-out;
 }
 
-.gradient-overlay {
+.content {
+    padding: 3.5rem;
+    font-size: 1.4rem;
+    color: var(--off-white);
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+.content::after {
     position: absolute;
-    top: 60%;
+    content: '';
     left: 0;
     right: 0;
-    width: 100%;
+    bottom: -55%;
     height: 100%;
-    transform: scaleX(2);
+    overflow: hidden;
+    transform: scaleX(4);
     background:
         radial-gradient(circle, hsla(341, 67%, 59%, .5) 0%, hsla(289, 48%, 22%, 0) 40%),
         radial-gradient(circle, hsla(341, 67%, 59%, .8) 0%, hsla(289, 48%, 22%, 0) 30%),
         radial-gradient(circle, hsla(341, 67%, 59%, .8) 0%, hsla(289, 48%, 22%, 0) 20%);
 }
 
-.content {
-    padding: 2rem;
-    color: var(--off-white);
-}
-
 .content__logo {
     width: 25rem;
-    margin-bottom: 5rem;
+    margin-bottom: 3rem;
 }
 
 .content__text {
@@ -345,23 +353,15 @@ body {
 
 @media (min-width: 768px) {
     .content {
-        max-width: 50rem;
         padding: 20rem;
     }
 
-    .gradient-overlay {
-        transform: scaleX(3) scaleY(1.5);
-        animation: moveUpDown 10s ease-in-out infinite;
-        top: 70%;
-        background:
-            radial-gradient(circle, hsla(341, 67%, 59%, .5) 0%, hsla(289, 48%, 22%, 0) 40%),
-            radial-gradient(circle, hsla(341, 67%, 59%, .8) 0%, hsla(289, 48%, 22%, 0) 30%),
-            radial-gradient(circle, hsla(341, 67%, 59%, .8) 0%, hsla(289, 48%, 22%, 0) 20%);
+    .content__text {
+        max-width: 60rem;
     }
 }
 
 @keyframes moveUpDown {
-
     0%,
     100% {
         transform: scaleX(3) scaleY(1.5) translateY(0);
