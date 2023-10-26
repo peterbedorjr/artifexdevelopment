@@ -14,6 +14,7 @@ fetch('/stars.json')
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 50;
+    camera.up.set(0, 1, 0);
 
     starCanvas.style.opacity = 1;
 
@@ -88,6 +89,10 @@ void main() {
       mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
     }, false);
 
+    let phi = 0; // vertical angle
+    let theta = 0; // horizontal angle
+    const radius = 50; // distance from the origin
+
     function animate() {
       requestAnimationFrame(animate);
 
@@ -95,12 +100,18 @@ void main() {
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       if (!prefersReducedMotion) {
-        // Analog stick-like control
-        const speedFactor = 0.01; // Adjust this to make it move faster or slower
-        camera.position.x += mouse.x * speedFactor;
-        camera.position.y += -mouse.y * speedFactor;
+        const speedFactor = .0006;
+        theta -= mouse.y * speedFactor;
+        phi += mouse.x * speedFactor;
 
-        camera.lookAt(scene.position);
+        // Ensure phi is within bounds
+        phi = Math.min(Math.max(0.1, phi), Math.PI - 0.1);
+
+        const x = radius * Math.sin(phi) * Math.sin(theta);
+        const y = radius * Math.cos(phi);
+        const z = radius * Math.sin(phi) * Math.cos(theta);
+
+        camera.lookAt(new THREE.Vector3(x, y, z));
       }
 
       renderer.render(scene, camera);
