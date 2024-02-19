@@ -1,0 +1,293 @@
+---
+interface Props {
+	title: string;
+}
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Artifex Development - Experts in PHP, Laravel, and Vue.js</title>
+	<meta name="description" content="Artifex Development web development company specializing in PHP, Laravel, and Vue.js. Our expert team creates custom web solutions to solve your problems.">
+	<meta name="keywords" content="PHP web development, Laravel development, Vue.js web development, custom web solutions, web development company, Artifex Development">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:title" content="Artifex Development - Experts in PHP, Laravel, and Vue.js">
+	<meta property="og:type" content="">
+	<meta property="og:url" content="https://artifexdevelopment.co">
+	<meta property="og:image" content="">
+	<meta property="og:description" content="Artifex Development web development company specializing in PHP, Laravel, and Vue.js. Our expert team creates custom web solutions to solve your problems.">
+	<meta property="og:site_name" content="Artifex Development">
+	<meta property="og:locale" content="en_US">
+	<meta name="generator" content={Astro.generator} />
+	<meta name="theme-color" content="#fafafa">
+</head>
+<body>
+	<canvas id="stars"></canvas>
+	<main class="content">
+		<div class="content__logo">
+			<img src="./src/images/artifex-logo.svg" alt="Artifex Development logo">
+		</div>
+		<div class="content__text">
+			<p>Artifex Development crafts sleek, intuitive applications with the perfect blend of Laravel and Vue. We turn complex problems into simple, elegant digital experiences. Let's create brilliance, together.</p>
+			<p>
+				<a href="mailto:peter@artifexdevelopment.co">Get in touch</a>
+			</p>
+		</div>
+	</main>
+</body>
+</html>
+
+<style>
+	@import '../css/normalize.css';
+	@import '../css/html5boilerplate.css';
+	@import '../css/fonts.css';
+
+	:root {
+		--off-white: #f3f3f3;
+		--purple: #481d52;
+		--pink: #dd517e;
+		--yellow: #e68e35;
+	}
+
+	html,
+	body {
+		min-width: 100vw;
+		min-height: 100%;
+	}
+
+	body {
+		font-size: 1.6rem;
+		background-color: var(--purple);
+		background-size: cover;
+		background-position: -20%;
+		font-family: 'DM Sans', sans-serif;
+		overflow: hidden;
+		max-width: 100vw;
+		max-height: 100vh;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		text-rendering: optimizeLegibility;
+		font-synthesis: none;
+	}
+
+	#stars {
+		display: block;
+		position: absolute;
+		z-index: -1;
+		width: 100vw;
+		height: 100vh;
+		opacity: 0;
+		transition: opacity 500ms ease-out;
+	}
+
+	.content {
+		padding: 3.5rem;
+		font-size: 1.4rem;
+		color: var(--off-white);
+		width: 100vw;
+		height: 100vh;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.content::after {
+		position: absolute;
+		content: '';
+		left: 0;
+		right: 0;
+		bottom: -55%;
+		height: 100%;
+		overflow: hidden;
+		transform: scaleX(4);
+		background:
+			radial-gradient(circle, hsla(341, 67%, 59%, .5) 0%, hsla(289, 48%, 22%, 0) 40%),
+			radial-gradient(circle, hsla(341, 67%, 59%, .8) 0%, hsla(289, 48%, 22%, 0) 30%),
+			radial-gradient(circle, hsla(341, 67%, 59%, .8) 0%, hsla(289, 48%, 22%, 0) 20%);
+	}
+
+	.content__logo {
+		width: 25rem;
+		margin-bottom: 3rem;
+	}
+
+	.content__text {
+		font-size: 2rem;
+		line-height: 1.7em;
+	}
+
+	.content__text a {
+		color: var(--pink);
+		text-decoration: none;
+		border-bottom: 1px solid var(--pink);
+		transition: border-width 200ms ease-out;
+	}
+
+	.content__text a:hover {
+		color: var(--pink);
+		font-weight: 600;
+		text-decoration: none;
+		border-width: 2px;
+	}
+
+	@media (min-width: 768px) {
+		.content {
+			padding: 20rem;
+		}
+
+		.content__text {
+			max-width: 60rem;
+		}
+	}
+
+	@keyframes moveUpDown {
+		0%,
+		100% {
+			transform: scaleX(3) scaleY(1.5) translateY(0);
+		}
+
+		50% {
+			transform: scaleX(3) scaleY(1.5) translateY(-30px);
+		}
+	}
+</style>
+
+<script>
+	import * as THREE from 'three';
+
+	// Step 1: Load the JSON data
+	fetch('/stars.json')
+		.then(response => response.json())
+		.then(data => {
+			const starCanvas = document.getElementById('stars');
+
+			const maxZ = Math.max(...data.map(star => star[2]));
+			const minZ = Math.min(...data.map(star => star[2]));
+
+			const scene = new THREE.Scene();
+			scene.background = new THREE.Color(0x481d52);
+
+			const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+			camera.position.z = 50;
+			camera.up.set(0, 1, 0);
+
+			starCanvas.style.opacity = 1;
+
+			const renderer = new THREE.WebGLRenderer({
+				canvas: starCanvas,
+			});
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.setPixelRatio(window.devicePixelRatio || 1);
+
+			const geometry = new THREE.BufferGeometry();
+			const vertices = [];
+			const opacities = [];
+			const sizes = [];
+
+			for (let i = 0; i < data.length; i++) {
+				const [x, y, z, lum] = data[i];
+				vertices.push(x, y, z);
+
+				const opacity = (z - minZ) / (maxZ - minZ) * .3;
+				opacities.push(opacity);
+
+				const size = Math.max(0.005, Math.min(0.1, 0.02 * Math.pow(Math.abs(lum), 0.3)));
+				sizes.push(size);
+			}
+
+			geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+			geometry.setAttribute('alpha', new THREE.Float32BufferAttribute(opacities, 1));
+			geometry.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
+
+			const vertexShader = `
+const float minSize = 3.0;
+const float maxSize = 20.0;
+
+attribute float alpha;
+attribute float size;
+varying float vAlpha;
+
+void main() {
+  vAlpha = alpha;
+  vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+  gl_PointSize = size * 50.0;
+  gl_Position = projectionMatrix * mvPosition;
+}
+`;
+
+			const fragmentShader = `
+uniform sampler2D uTexture;
+varying float vAlpha;
+
+void main() {
+  gl_FragColor = texture2D(uTexture, gl_PointCoord);
+  gl_FragColor.a *= vAlpha;
+}
+`;
+
+			const shaderMaterial = new THREE.ShaderMaterial({
+				uniforms: {
+					uTexture: { value: new THREE.TextureLoader().load('/star.png') },
+				},
+				vertexShader: vertexShader,
+				fragmentShader: fragmentShader,
+				transparent: true,
+			});
+
+			const stars = new THREE.Points(geometry, shaderMaterial);
+			scene.add(stars);
+
+			let mouse = new THREE.Vector2();
+
+			window.addEventListener('mousemove', (event) => {
+				mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+				mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+			}, false);
+
+			let phi = 0; // vertical angle
+			let theta = 0; // horizontal angle
+			const radius = 50; // distance from the origin
+
+			function animate() {
+				requestAnimationFrame(animate);
+
+				// Check if the user prefers reduced motion
+				const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+				if (!prefersReducedMotion) {
+					const speedFactor = .0006;
+					theta -= mouse.y * speedFactor;
+					phi += mouse.x * speedFactor;
+
+					// Ensure phi is within bounds
+					phi = Math.min(Math.max(0.1, phi), Math.PI - 0.1);
+
+					const x = radius * Math.sin(phi) * Math.sin(theta);
+					const y = radius * Math.cos(phi);
+					const z = radius * Math.sin(phi) * Math.cos(theta);
+
+					camera.lookAt(new THREE.Vector3(x, y, z));
+				}
+
+				renderer.render(scene, camera);
+			}
+
+			animate();
+
+			window.addEventListener('resize', function () {
+				const newWidth = window.innerWidth;
+				const newHeight = window.innerHeight;
+
+				// Update the camera's aspect ratio based on the new dimensions
+				camera.aspect = newWidth / newHeight;
+				camera.updateProjectionMatrix();
+
+				// Resize the renderer's viewport and canvas
+				renderer.setSize(newWidth, newHeight);
+			});
+		})
+		.catch(error => {
+			console.error('Error loading JSON:', error);
+		});
+</script>
