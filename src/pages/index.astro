@@ -196,7 +196,7 @@ interface Props {
 				const [x, y, z, lum] = data[i];
 				vertices.push(x, y, z);
 
-				const opacity = (z - minZ) / (maxZ - minZ) * .3;
+				const opacity = 0.15 + (z - minZ) / (maxZ - minZ) * 0.85;
 				opacities.push(opacity);
 
 				const size = Math.max(0.005, Math.min(0.1, 0.02 * Math.pow(Math.abs(lum), 0.3)));
@@ -208,16 +208,15 @@ interface Props {
 			geometry.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
 
 			const vertexShader = `
-const float minSize = 3.0;
-const float maxSize = 20.0;
-
 attribute float alpha;
 attribute float size;
 varying float vAlpha;
+varying vec3 vPosition;
 
 void main() {
   vAlpha = alpha;
-  vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+  vPosition = position;
+  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
   gl_PointSize = size * 50.0;
   gl_Position = projectionMatrix * mvPosition;
 }
@@ -225,17 +224,26 @@ void main() {
 
 			const fragmentShader = `
 uniform sampler2D uTexture;
+uniform float uTime;
 varying float vAlpha;
+varying vec3 vPosition;
 
 void main() {
+  // Twinkling effect based on position and time
+  float twinkle = sin(uTime * 2.0 + vPosition.x * 0.1) *
+                  sin(uTime * 1.7 + vPosition.y * 0.1) *
+                  sin(uTime * 2.3 + vPosition.z * 0.1);
+  twinkle = 0.7 + twinkle * 0.3; // Range: 0.4 to 1.0
+
   gl_FragColor = texture2D(uTexture, gl_PointCoord);
-  gl_FragColor.a *= vAlpha;
+  gl_FragColor.a *= vAlpha * twinkle;
 }
 `;
 
 			const shaderMaterial = new THREE.ShaderMaterial({
 				uniforms: {
 					uTexture: { value: new THREE.TextureLoader().load('/star.png') },
+					uTime: { value: 0.0 },
 				},
 				vertexShader: vertexShader,
 				fragmentShader: fragmentShader,
@@ -245,37 +253,75 @@ void main() {
 			const stars = new THREE.Points(geometry, shaderMaterial);
 			scene.add(stars);
 
-			let mouse = new THREE.Vector2();
+			// Mouse tracking with target and current values for smooth interpolation
+			let targetMouse = new THREE.Vector2(0, 0);
+			let currentMouse = new THREE.Vector2(0, 0);
 
 			window.addEventListener('mousemove', (event) => {
-				mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-				mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+				targetMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+				targetMouse.y = (event.clientY / window.innerHeight) * 2 - 1;
 			}, false);
 
-			let phi = 0; // vertical angle
-			let theta = 0; // horizontal angle
-			const radius = 50; // distance from the origin
+			// Camera orbital parameters
+			let theta = 0; // horizontal angle (azimuth)
+			let phi = Math.PI / 2; // vertical angle (polar) - start at equator
+			let targetTheta = 0;
+			let targetPhi = Math.PI / 2;
+			const radius = 50; // distance from origin
+
+			// Auto-rotation for ambient movement
+			let autoRotation = 0;
+			const autoRotationSpeed = 0.0003;
+
+			// Animation timing
+			let lastTime = performance.now();
 
 			function animate() {
 				requestAnimationFrame(animate);
+
+				const currentTime = performance.now();
+				const deltaTime = Math.min((currentTime - lastTime) / 16.67, 3); // Normalize to 60fps, cap at 3x
+				lastTime = currentTime;
 
 				// Check if the user prefers reduced motion
 				const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 				if (!prefersReducedMotion) {
-					const speedFactor = .0006;
-					theta -= mouse.y * speedFactor;
-					phi += mouse.x * speedFactor;
+					// Smooth mouse interpolation (easing)
+					const mouseLerp = 1 - Math.pow(0.85, deltaTime);
+					currentMouse.x += (targetMouse.x - currentMouse.x) * mouseLerp;
+					currentMouse.y += (targetMouse.y - currentMouse.y) * mouseLerp;
 
-					// Ensure phi is within bounds
-					phi = Math.min(Math.max(0.1, phi), Math.PI - 0.1);
+					// Auto-rotation adds gentle constant drift
+					autoRotation += autoRotationSpeed * deltaTime;
 
+					// Mouse controls camera direction
+					// X movement = horizontal rotation (theta)
+					// Y movement = vertical rotation (phi)
+					const sensitivity = 0.015;
+					targetTheta = autoRotation + currentMouse.x * sensitivity * 50;
+					targetPhi = Math.PI / 2 + currentMouse.y * sensitivity * 25;
+
+					// Smooth camera angle interpolation
+					const cameraLerp = 1 - Math.pow(0.92, deltaTime);
+					theta += (targetTheta - theta) * cameraLerp;
+					phi += (targetPhi - phi) * cameraLerp;
+
+					// Clamp phi to avoid gimbal lock (keep away from poles)
+					phi = Math.max(0.3, Math.min(Math.PI - 0.3, phi));
+
+					// Convert spherical to Cartesian coordinates for camera position
 					const x = radius * Math.sin(phi) * Math.sin(theta);
 					const y = radius * Math.cos(phi);
 					const z = radius * Math.sin(phi) * Math.cos(theta);
 
-					camera.lookAt(new THREE.Vector3(x, y, z));
+					// Update camera position and look at origin
+					camera.position.set(x, y, z);
+					camera.lookAt(0, 0, 0);
 				}
+
+				// Update time uniform for twinkling
+				shaderMaterial.uniforms.uTime.value = currentTime * 0.001;
 
 				renderer.render(scene, camera);
 			}
