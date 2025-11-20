@@ -173,7 +173,56 @@ interface Props {
 			const minZ = Math.min(...data.map(star => star[2]));
 
 			const scene = new THREE.Scene();
-			scene.background = new THREE.Color(0x481d52);
+			scene.background = new THREE.Color(0x0a0a12);
+
+			// Milky Way band effect
+			const milkyWayGeometry = new THREE.SphereGeometry(400, 64, 64);
+			const milkyWayMaterial = new THREE.ShaderMaterial({
+				side: THREE.BackSide,
+				transparent: true,
+				uniforms: {
+					uColor1: { value: new THREE.Color(0x1a1a2e) },
+					uColor2: { value: new THREE.Color(0x4a3a6e) },
+				},
+				vertexShader: `
+					varying vec3 vPosition;
+					void main() {
+						vPosition = position;
+						gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+					}
+				`,
+				fragmentShader: `
+					uniform vec3 uColor1;
+					uniform vec3 uColor2;
+					varying vec3 vPosition;
+
+					void main() {
+						// Create vertical band through center (Milky Way effect)
+						vec3 normalizedPos = normalize(vPosition);
+
+						// Band intensity based on distance from vertical axis
+						float bandWidth = 0.4;
+						float horizontalDist = length(vec2(normalizedPos.x, normalizedPos.z));
+						float bandIntensity = 1.0 - smoothstep(0.0, bandWidth, horizontalDist);
+
+						// Add some variation along the band
+						float variation = sin(normalizedPos.y * 3.0) * 0.15 +
+						                  sin(normalizedPos.y * 7.0) * 0.08 +
+						                  sin(normalizedPos.y * 13.0) * 0.05;
+						bandIntensity *= (0.7 + variation);
+
+						// Soft edges
+						bandIntensity = pow(bandIntensity, 1.5);
+
+						vec3 color = mix(uColor1, uColor2, bandIntensity * 0.6);
+						float alpha = bandIntensity * 0.35;
+
+						gl_FragColor = vec4(color, alpha);
+					}
+				`,
+			});
+			const milkyWay = new THREE.Mesh(milkyWayGeometry, milkyWayMaterial);
+			scene.add(milkyWay);
 
 			const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 			camera.position.z = 50;
@@ -229,11 +278,11 @@ varying float vAlpha;
 varying vec3 vPosition;
 
 void main() {
-  // Twinkling effect based on position and time
-  float twinkle = sin(uTime * 2.0 + vPosition.x * 0.1) *
-                  sin(uTime * 1.7 + vPosition.y * 0.1) *
-                  sin(uTime * 2.3 + vPosition.z * 0.1);
-  twinkle = 0.7 + twinkle * 0.3; // Range: 0.4 to 1.0
+  // Subtle twinkling effect based on position and time
+  float twinkle = sin(uTime * 0.8 + vPosition.x * 0.1) *
+                  sin(uTime * 0.6 + vPosition.y * 0.1) *
+                  sin(uTime * 0.9 + vPosition.z * 0.1);
+  twinkle = 0.85 + twinkle * 0.15; // Range: 0.7 to 1.0
 
   gl_FragColor = texture2D(uTexture, gl_PointCoord);
   gl_FragColor.a *= vAlpha * twinkle;
@@ -271,7 +320,7 @@ void main() {
 
 			// Auto-rotation for ambient movement
 			let autoRotation = 0;
-			const autoRotationSpeed = 0.0003;
+			const autoRotationSpeed = 0.00005;
 
 			// Animation timing
 			let lastTime = performance.now();
@@ -298,7 +347,7 @@ void main() {
 					// Mouse controls camera direction
 					// X movement = horizontal rotation (theta)
 					// Y movement = vertical rotation (phi)
-					const sensitivity = 0.015;
+					const sensitivity = 0.004;
 					targetTheta = autoRotation + currentMouse.x * sensitivity * 50;
 					targetPhi = Math.PI / 2 + currentMouse.y * sensitivity * 25;
 
